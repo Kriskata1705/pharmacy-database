@@ -121,8 +121,8 @@ create table medicines(
 -- lekarstva - bolesti
 create table medicine_diseases(
 	medicine_id int not null,
-    diseases_id int not null,
-    primary key(medicine_id, diseases_id),
+    disease_id int not null,
+    primary key(medicine_id, disease_id),
     constraint fk_medicine_diseases_medicine
     foreign key(medicine_id) references medicines(medicine_id),
     constraint fk_medicine_diseases_disease
@@ -154,7 +154,193 @@ create table medicine_warnings(
     foreign key (medicine_id) references medicines(medicine_id)
 );
 
+-- recepti
+create table prescriptions(
+	prescription_id int auto_increment primary key,
+    customer_id int not null,
+    doctor_id int not null,
+    issue_date date not null,
+    valid_until date not null,
+    status enum('active', 'partially_used', 'used', 'expired', 'cancelled') not null default 'active',
+    notes varchar(255),
+    created_at datetime not null default current_timestamp,
+    constraint fk_prescriptions_customer
+    foreign key(customer_id) references customers(customer_id),
+    constraint fk_prescriptions_doctor
+    foreign key(doctor_id) references doctors(doctor_id),
+    constraint chk_prescriptions_dates
+    check (valid_until >= issue_date)
+);
 
+-- redove v receptata
+create table prescription_items(
+	prescription_item_id int auto_increment primary key,
+    prescription_id int not null,
+    medicine_id int not null,
+    quantity_prescribed int not null,
+    dosage_text varchar(255),
+    duration_days int,
+    constraint fk_prescription_items_prescription
+    foreign key (prescription_id) references prescriptions(prescription_id),
+    constraint fk_prescription_items_medicine
+    foreign key (medicine_id) references medicines(medicine_id),
+    constraint chk_prescription_items_quantity
+    check (quantity_prescribed > 0),
+    constraint chk_prescription_items_duration
+    check (duration_days is null or duration_days > 0)
+);
+
+-- prodajbi
+create table sales(
+	sale_id int auto_increment primary key,
+    customer_id int not null,
+    pharmacist_id int not null,
+    sale_datetime datetime not null default current_timestamp,
+    total_amount decimal(10,2) not null default 0.00,
+    notes varchar(250),
+    created_at datetime not null default current_timestamp,
+    constraint fk_sales_customer
+    foreign key (customer_id) references customers(customer_id),
+    constraint fk_sales_pharmacist
+    foreign key (pharmacist_id) references pharmacists(pharmacist_id),
+    constraint chk_sales_total_amount
+    check (total_amount >= 0)
+);
+
+-- partidi
+create table batches(
+	batch_id int auto_increment primary key,
+    medicine_id int not null,
+    supplier_id int not null,
+    batch_number varchar(50) not null unique,
+    received_date date not null,
+    expiry_date date not null,
+    purchase_price decimal(10,2) not null,
+    sale_price decimal(10,2) not null,
+    quantity_in_stock int not null default 0,
+    minimum_stock int not null default 0,
+    
+    constraint fk_batches_medicine
+	foreign key(medicine_id) references medicines(medicine_id),
+    
+    constraint fk_batches_supplier
+    foreign key(supplier_id) references suppliers(supplier_id),
+    
+    constraint chk_batches_dates
+    check (expiry_date >= received_date),
+    
+    constraint chk_batches_price
+    check (sale_price > 0),
+    
+    constraint chk_batches_quantity
+    check (quantity_in_stock >= 0),
+    
+    constraint chk_batches_minimum_stock
+    check (minimum_stock >= 0)
+);
+
+-- redove v prodajbata
+create table sale_items(
+	sale_item_id int auto_increment primary key,
+    sale_id int not null,
+    medicine_id int not null,
+    batch_id int not null,
+    prescription_id int null,
+    quantity int not null,
+    unit_price decimal(10,2) not null,
+    line_total decimal(10,2) not null,
+    constraint fk_sale_items_sale
+    foreign key (sale_id) references sales(sale_id),
+    
+    constraint fk_sale_items_medicine
+    foreign key (medicine_id) references medicines(medicine_id),
+    
+    constraint fk_sale_items_batch
+    foreign key (batch_id) references batches(batch_id),
+    
+    constraint fk_sale_items_prescription
+    foreign key (prescription_id) references prescriptions(prescription_id),
+    
+    constraint chk_sale_items_quantity
+    check (quantity > 0),
+    
+    constraint chk_sale_items_unit_price
+    check (unit_price > 0.00),
+    
+    constraint chk_sale_items_line_total
+    check(line_total > 0)
+);
+
+
+-- plashtaniq
+create table payments(
+	payment_id int auto_increment primary key,
+    sale_id int not null,
+    payment_date datetime not null default current_timestamp,
+    payment_method enum('cash', 'card', 'bank_transfer') not null,
+    paid_amount decimal(10,2) not null,
+    reference_number varchar(100),
+    
+    constraint fk_payments_sale
+    foreign key (sale_id) references sales(sale_id),
+    
+    constraint chk_payments_paid_amount
+    check (paid_amount > 0.00)
+);
+
+-- istoriq na cenite
+create table price_history(
+	price_history_id int auto_increment primary key,
+    medicine_id int not null,
+    old_price decimal(10,2) not null,
+    new_price decimal(10,2) not null,
+    changed_at datetime not null default current_timestamp,
+    
+    constraint fk_price_history_medicine
+    foreign key (medicine_id) references medicines(medicine_id),
+    
+    constraint chk_price_history_old_price
+    check (old_price > 0),
+    
+    constraint chk_price_history_new_price
+    check (new_price > 0)
+);
+
+-- namalenie
+create table discounts(
+	discount_id int auto_increment primary key,
+    name varchar(100) not null,
+    discount_percent decimal(5,2) not null,
+    start_date date not null,
+    end_date date not null,
+    is_active boolean not null default true,
+    
+    constraint chk_discounts_percent
+    check(discount_percent > 0 and discount_percent <= 100),
+    
+    constraint chk_discounts_dates
+    check (end_date >= start_date)
+);
+
+-- dvijenie v sklada
+create table stock_movements (
+    movement_id int auto_increment primary key,
+    batch_id int not null,
+    movement_type enum('IN', 'OUT', 'ADJUSTMENT') not null,
+    quantity int not null,
+    movement_date datetime not null default current_timestamp,
+    notes varchar(255),
+
+    constraint fk_stock_movements_batch
+	foreign key (batch_id) references batches(batch_id),
+
+    constraint chk_stock_movements_quantity
+	check (quantity > 0)
+);
+alter table sales
+add column discount_id int null,
+add constraint fk_sales_discount
+	foreign key(discount_id) references discounts(discount_id);
 
 
 
