@@ -342,7 +342,222 @@ add column discount_id int null,
 add constraint fk_sales_discount
 	foreign key(discount_id) references discounts(discount_id);
 
+insert into customers (first_name, last_name, egn, phone, email, birth_date, address, loyalty_card_number, loyalty_points) values
+('Ivan', 'Petrov', '9001011234', '0888123456', 'ivan.petrov@email.com', '1990-01-01', 'Sofia, Mladost 1', 'LC1001', 120),
+('Maria', 'Georgieva', '9202152345', '0888234567', 'maria.georgieva@email.com', '1992-02-15', 'Plovdiv, Trakia', 'LC1002', 80),
+('Georgi', 'Dimitrov', '8507203456', '0888345678', 'georgi.dimitrov@email.com', '1985-07-20', 'Varna, Center', 'LC1003', 200),
+('Elena', 'Stoyanova', '9705114567', '0888456789', 'elena.stoyanova@email.com', '1997-05-11', 'Burgas, Lazur', 'LC1004', 50),
+('Petar', 'Nikolov', '8809305678', '0888567890', 'petar.nikolov@email.com', '1988-09-30', 'Ruse, Druzhba', 'LC1005', 30);
 
+insert into pharmacists (first_name, last_name, license_number, phone, email, hire_date, salary) values
+('Nikolay', 'Ivanov', 'PH1001', '0899123456', 'nikolay.ivanov@pharmacy.bg', '2022-03-01', 2200.00),
+('Desislava', 'Koleva', 'PH1002', '0899234567', 'desislava.koleva@pharmacy.bg', '2021-06-15', 2400.00),
+('Radoslav', 'Petkov', 'PH1003', '0899345678', 'radoslav.petkov@pharmacy.bg', '2023-01-10', 2100.00);
+
+insert into doctors(first_name, last_name, specialty, license_number, phone, email) values
+('Hristo', 'Marinov', 'General Practitioner', 'DR1001', '0877123456', 'hristo.marinov@hospital.bg'),
+('Teodora', 'Ilieva', 'Pediatrics', 'DR1002', '0877234567', 'teodora.ilieva@hospital.bg'),
+('Stefan', 'Angelov', 'Pulmonology', 'DR1003', '0877345678', 'stefan.angelov@hospital.bg');
+
+insert into manufacturers(name, country, phone, email) values
+('Sopharma', 'Bulgaria', '021111111', 'office@sopharma.bg'),
+('Bayer', 'Germany', '021222222', 'contact@bayer.com'),
+('Pfizer', 'USA', '021333333', 'support@pfizer.com'),
+('Novartis', 'Switzerland', '021444444', 'info@novartis.com'),
+('GlaxoSmithKline', 'UK', '021555555', 'office@gsk.com');
+
+insert into suppliers(name, bulstat, phone, email, address) values
+('Pharma Supply Ltd', '123456789', '029111111', 'sales@pharmasupply.bg', 'Sofia, Industrial Zone'),
+('Med Logistics AD', '234567891', '029222222', 'office@medlogistics.bg', 'Plovdiv, Maritsa'),
+('Health Trade OOD', '345678912', '029333333', 'contact@healthtrade.bg', 'Varna, West Zone');
+
+insert into categories(name, description) values
+('Antibiotics', 'Medicines used to treat bacterial infections'),
+('Painkillers', 'Medicines for pain relief'),
+('Anti-inflammatory', 'Medicines reducing inflammation'),
+('Vitamins', 'Vitamin supplements'),
+('Cough Medicines', 'Medicines for cough and cold symptoms');
+
+insert into dosage_forms(name, description) values
+('Tablets', 'Solid oral dosage form'),
+('Capsules', 'Medicine enclosed in capsule shell'),
+('Syrup', 'Liquid oral dosage form'),
+('Cream', 'Topical semi-solid dosage form'),
+('Ampoules', 'Injectable dosage form');
+
+insert into diseases(name, description) values 
+('Flu', 'Viral respiratory infection'),
+('Cold', 'Common cold'),
+('Headache', 'Pain in the head region'),
+('Bronchitis', 'Inflammation of the bronchial tubes'),
+('Vitamin Deficiency', 'Lack of essential vitamins');
+
+insert into active_ingredients(name, description) values
+('Paracetamol', 'Pain reliever and fever reducer'),
+('Ibuprofen', 'Nonsteroidal anti-inflammatory drug'),
+('Amoxicillin', 'Penicillin antibiotic'),
+('Dextromethorphan', 'Cough suppressant'),
+('Vitamin C', 'Essential vitamin');
+
+insert into medicines(name, manufacturer_id, category_id, dosage_form_id, description, standard_dosage, usage_instructions, unit_price, requires_prescription, min_age, is_active) values
+('Paracetamol 500mg', 1, 2, 1, 'Pain relief and fever reduction', '1 tablet 3 times daily', 'Take after food with water', 4.50, FALSE, 6, TRUE),
+('Ibuprofen 200mg', 2, 3, 1, 'Anti-inflammatory and pain relief', '1 tablet 2-3 times daily', 'Take after meals', 6.80, FALSE, 12, TRUE),
+('Amoxicillin 500mg', 3, 1, 2, 'Antibiotic for bacterial infections', '1 capsule 3 times daily', 'Use only as prescribed by doctor', 12.90, TRUE, 0, TRUE),
+('Cough Syrup Kids', 4, 5, 3, 'Syrup for dry cough', '5 ml 3 times daily', 'Shake well before use', 8.20, FALSE, 3, TRUE),
+('Vitamin C 1000mg', 5, 4, 1, 'Vitamin C supplement', '1 tablet daily', 'Dissolve in water or take directly', 9.50, FALSE, 0, TRUE);
+
+insert into medicine_diseases(medicine_id, disease_id) values
+(1, 1),
+(1, 3),
+(2, 3),
+(2, 4),
+(3, 4),
+(4, 2),
+(4, 4),
+(5, 5),
+(5, 1);
+
+insert into medicine_ingredients(medicine_id, ingredient_id, amount, unit) values
+(1, 1, 500.00, 'mg'),
+(2, 2, 200.00, 'mg'),
+(3, 3, 500.00, 'mg'),
+(4, 4, 15.00, 'mg'),
+(5, 5, 1000.00, 'mg');
+
+insert into medicine_warnings(medicine_id, warning_text, severity_level) values
+(1, 'Do not exceed the recommended daily dose', 'medium'),
+(2, 'Not suitable for people with stomach ulcers', 'high'),
+(3, 'Use only with valid prescription', 'high'),
+(4, 'Not suitable for children under 3 years', 'medium'),
+(5, 'Consult a doctor if taken with other supplements', 'low');
+
+insert into prescriptions(customer_id, doctor_id, issue_date, valid_until, status, notes) values
+(1, 1, '2026-03-01', '2026-03-31', 'active', 'Prescription for bronchitis treatment'),
+(2, 2, '2026-03-05', '2026-04-05', 'active', 'Child treatment prescription'),
+(3, 3, '2026-02-20', '2026-03-20', 'expired', 'Old prescription'),
+(4, 1, '2026-03-10', '2026-04-10', 'partially_used', 'Antibiotic treatment'),
+(5, 3, '2026-03-12', '2026-04-12', 'active', 'Respiratory infection');
+
+insert into prescription_items(prescription_id, medicine_id, quantity_prescribed, dosage_text, duration_days) values
+(1, 3, 2, '1 capsule 3 times daily', 7),
+(2, 4, 1, '5 ml 3 times daily', 5),
+(3, 3, 1, '1 capsule 3 times daily', 5),
+(4, 3, 2, '1 capsule 2 times daily', 10),
+(5, 3, 1, '1 capsule 3 times daily', 6);
+
+insert into batches(medicine_id, supplier_id, batch_number, received_date, expiry_date, purchase_price, sale_price, quantity_in_stock, minimum_stock) values
+(1, 1, 'BATCH-PAR-001', '2026-01-10', '2027-01-10', 2.50, 4.50, 100, 20),
+(2, 1, 'BATCH-IBU-001', '2026-01-12', '2027-01-12', 4.20, 6.80, 80, 15),
+(3, 2, 'BATCH-AMO-001', '2026-02-01', '2026-12-01', 8.50, 12.90, 50, 10),
+(4, 3, 'BATCH-COU-001', '2026-02-15', '2026-10-15', 5.30, 8.20, 60, 12),
+(5, 2, 'BATCH-VIT-001', '2026-01-20', '2027-01-20', 6.50, 9.50, 90, 20);
+
+insert into sales(customer_id, pharmacist_id, sale_datetime, total_amount, notes) values
+(1, 1, '2026-03-15 10:30:00', 17.40, 'Regular purchase'),
+(2, 2, '2026-03-16 12:15:00', 8.20, 'Cough syrup purchase'),
+(3, 1, '2026-03-17 15:40:00', 19.00, 'Vitamin and painkiller purchase'),
+(4, 3, '2026-03-18 09:20:00', 12.90, 'Prescription medicine'),
+(5, 2, '2026-03-18 17:10:00', 4.50, 'Single item purchase');
+
+insert into sale_items(sale_id, medicine_id, batch_id, prescription_id, quantity, unit_price, line_total) values
+(1, 1, 1, NULL, 2, 4.50, 9.00),
+(1, 2, 2, NULL, 1, 6.80, 6.80),
+(1, 5, 5, NULL, 1, 1.60, 1.60),
+(2, 4, 4, 2, 1, 8.20, 8.20),
+(3, 5, 5, NULL, 2, 9.50, 19.00),
+(4, 3, 3, 4, 1, 12.90, 12.90),
+(5, 1, 1, NULL, 1, 4.50, 4.50);
+
+insert into payments(sale_id, payment_date, payment_method, paid_amount, reference_number) values
+(1, '2026-03-15 10:31:00', 'card', 17.40, 'CARD-1001'),
+(2, '2026-03-16 12:16:00', 'cash', 8.20, 'CASH-1002'),
+(3, '2026-03-17 15:41:00', 'card', 19.00, 'CARD-1003'),
+(4, '2026-03-18 09:21:00', 'bank_transfer', 12.90, 'BANK-1004'),
+(5, '2026-03-18 17:11:00', 'cash', 4.50, 'CASH-1005');
+
+insert into price_history(medicine_id, old_price, new_price, changed_at) values
+(1, 4.00, 4.50, '2026-01-05 09:00:00'),
+(2, 6.20, 6.80, '2026-01-10 10:00:00'),
+(3, 11.50, 12.90, '2026-02-01 11:00:00'),
+(4, 7.80, 8.20, '2026-02-10 12:00:00'),
+(5, 8.90, 9.50, '2026-01-15 13:00:00');
+
+insert into discounts(name, discount_percent, start_date, end_date, is_active) values
+('Spring Promo', 10.00, '2026-03-01', '2026-03-31', TRUE),
+('Vitamin Week', 15.00, '2026-03-10', '2026-03-20', TRUE),
+('Loyal Customer Discount', 5.00, '2026-01-01', '2026-12-31', TRUE);
+
+update sales 
+set discount_id = 1
+where sale_id = 1;
+
+update sales
+set discount_id = 2
+where sale_id = 3;
+
+insert into stock_movements(batch_id, movement_type, quantity, movement_date, notes) values
+(1, 'IN', 100, '2026-01-10 08:00:00', 'Initial stock delivery'),
+(2, 'IN', 80, '2026-01-12 09:00:00', 'Initial stock delivery'),
+(3, 'IN', 50, '2026-02-01 10:00:00', 'Initial stock delivery'),
+(4, 'IN', 60, '2026-02-15 11:00:00', 'Initial stock delivery'),
+(5, 'IN', 90, '2026-01-20 12:00:00', 'Initial stock delivery'),
+(1, 'OUT', 2, '2026-03-15 10:31:00', 'Sale item from sale 1'),
+(2, 'OUT', 1, '2026-03-15 10:31:00', 'Sale item from sale 1'),
+(5, 'OUT', 1, '2026-03-15 10:31:00', 'Sale item from sale 1'),
+(4, 'OUT', 1, '2026-03-16 12:16:00', 'Sale item from sale 2'),
+(5, 'OUT', 2, '2026-03-17 15:41:00', 'Sale item from sale 3'),
+(3, 'OUT', 1, '2026-03-18 09:21:00', 'Sale item from sale 4'),
+(1, 'OUT', 1, '2026-03-18 17:11:00', 'Sale item from sale 5');
+
+
+-- zaqvki
+
+-- 2. vsichki lekarstva s recepta i na 10 euro
+select medicine_id, name, unit_price, requires_prescription
+from medicines
+where requires_prescription = true and unit_price > 10;
+
+-- 3. kolko prodajbi ima vseki farmacevt
+select p.pharmacist_id, p.first_name, p.last_name, count(s.sale_id) as total_sales
+from pharmacists p
+join sales s
+on p.pharmacist_id = s.pharmacist_id 
+group by p.pharmacist_id, p.first_name, p.last_name;
+
+-- 4. vsqka prodajba s klienta i farmacevta, koito q e obrabotil
+select 
+	s.sale_id, 
+    s.sale_datetime, 
+    c.first_name as customer_first_name, 
+    c.last_name as customer_last_name, 
+    p.first_name as pharmacist_first_name,
+    p.last_name as pharmacist_last_name,
+    s.total_amount
+from sales s
+inner join customers c 
+on s.customer_id = c.customer_id
+inner join pharmacists p
+on s.pharmacist_id = p.pharmacist_id;
+
+-- 5. vsichki lekarstva dori i tezi koito oshte ne sa prodavani
+select 
+    m.medicine_id,
+    m.name,
+    count(si.sale_item_id) as times_sold
+from medicines m
+left join sale_items si
+on m.medicine_id = si.medicine_id
+group by m.medicine_id, m.name;
+
+-- 6. lekarstvata chiqto cena e po visoka ot srednata na vsichki
+select medicine_id, name, unit_price
+from medicines
+where unit_price > (
+	select avg(unit_price)
+    from medicines
+);
+
+-- 7. 
 
 
 
