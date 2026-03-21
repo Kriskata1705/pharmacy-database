@@ -557,7 +557,169 @@ where unit_price > (
     from medicines
 );
 
--- 7. 
+-- 7. obshtiq prihod ot vsqko lekarstvo
+select m.medicine_id,m.name, sum(si.line_total) as total_revenue
+from sale_items si
+join medicines m on si.medicine_id = m.medicine_id
+group by m.medicine_id, m.name
+order by total_revenue desc;
+
+-- prodajbi po metod na plashtane
+select payment_method, sum(paid_amount) as total_paid
+from payments
+group by payment_method;
+
+-- lekarstva i sustavkite im
+select m.name as medicine_name, ai.name as ingredient_name,
+mi.amount, mi.unit
+from medicine_ingredients mi
+join medicines m on mi.medicine_id = m.medicine_id
+join active_ingredients ai on mi.ingredient_id = ai.ingredient_id;
+
+
+-- trigeri
+
+-- proverqva dali kolichestvoto e nalichno, dali sroka ne e iztekal, dali kearstvoto ot sale_items suvpada s lek. ot izbranata partida, dali ima recepta ako lekarstvoto e s recepta
+drop trigger if exists trg_before_insert_sale_items;
+delimiter $$
+create trigger trg_before_insert_sale_items
+before insert on sale_items
+for each row
+begin
+	declare v_stock int;
+    declare v_expiry date;
+    declare v_batch_medicine_id int;
+    declare v_requires_prescription boolean;
+    
+    select quantity_in_stock, expiry_date, medicine_id
+    into v_stock, v_expiry, v_batch_medicine_id
+    from batches
+    where batch_id = new.batch_id;
+    
+    if v_batch_medicine_id <> new.medicine_id then
+		signal sqlstate '45000'
+        set message_text = 'Batch does not belong to the selected medicine';
+	end if;
+    
+    if v_stock < new.quantity then
+		signal sqlstate '45000'
+        set message_text = 'Not enough stock in batch';
+	end if;
+    
+    if v_expiry < curdate() then
+		signal sqlstate	'45000'
+        set message_text = 'Expired batch!!!';
+	end if;
+    
+    select requires_prescription
+    into v_requires_prescription
+    from medicines
+    where medicine_id = new.medicine_id;
+    
+    if v_requires_prescription = true and new.prescription_id is null then 
+		signal sqlstate '45000'
+        set message_text = 'Prescription is required!';
+	end if;
+    
+    set new.line_total = new.quantity * new.unit_price;
+end$$
+delimiter ;
+
+
+-- namalqva nalichnostta, zapis v skladovi dvi, preizdhislqva sumata na prodajbata
+drop trigger if exists trg_after_insert_sale_items;
+delimiter $$
+create trigger trg_after_insert_sale_items
+after insert on sale_items
+for each row
+begin
+	update batches
+    set quantity_in_stock = quantity_in_stock - new.quantity
+    where batch_id = new.batch_id;
+    
+    insert into stock_movements(batch_id, movement_type, quantity, movement_date, notes) values
+    (new.batch_id,'OUT', new.quantity, now(), concat('Automatic stock movement for sale_id = ', new.sale_id));
+    
+    update sales
+    set total_amount = (
+		select ifnull(sum(line_total), 0)
+        from sale_items
+        where sale_id = new.sale_id
+    )
+    where sale_id = new.sale_id;
+end$$
+delimiter ;
+
+-- preizchislqva line_total, ako se promeni kolichestvoto ili cena
+drop trigger if exists trg_before_update_sale_items;
+delimiter $$
+create trigger trg_before_update_sale_items
+before update on sale_items
+for each row
+begin
+	set new.line_total = new.quantity * new.unit_price;
+end$$
+delimiter ;
+
+-- preizchislqva total_amount v sales sled promqna na red v prodajba
+drop trigger if exists trg_after_update_sale_items
+delimiter $$
+create trigger trg_after_update_sale_items
+after update on sale_items
+for each row
+begin
+	update sales
+    set total_amount = (
+		select ifnull(sum(line_total), 0)
+        from sale_items
+        where sale_id = new.sale_id
+    )
+    where sale_id = new.sale_id;
+end$$
+delimiter ;
+
+-- preizchiclqva total_amount v sales ako byde iztrit red ot prodajbata
+drop trigger if exists trg_after_delete_sale_items;
+delimiter $$
+create trigger trg_after_delete_sale_items
+after delete on sale_items
+for each row
+begin
+	update sales
+    set total_amount = (
+		select ifnull(sum(line_total), 0)
+        from sale_items
+        where sale_id = old.sale_id
+    )
+    where sale_id = old.sale_id;
+end$$
+delimiter ;
+
+-- zapisva avtomatichno vsqka promqna na cenata v price_history
+drop trigger if exists trg_after_update_medicines_price
+delimiter $$
+create trigger trg_after_update_medicines_price
+after update on medicines
+for each row
+begin
+	if old.unit_price <> new.unit_price then
+		insert into price_history(medicine_id, old_price, new_price, changed_at)
+        values(new.medicine_id, old.unit_price, new.unit_price, now());
+	end if;
+end $$
+delimiter ;
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
