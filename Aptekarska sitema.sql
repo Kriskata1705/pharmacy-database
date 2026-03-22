@@ -709,10 +709,53 @@ begin
 end $$
 delimiter ;
 
+-- tablica koqto shte se pulni ot procedurata dolu
+create table expiry_alerts(
+	alert_id int auto_increment primary key,
+    batch_id int not null,
+    medicine_id int not null,
+    expiry_date date not null,
+    days_left int not null,
+    message varchar(255) not null,
+    created_at datetime not null default current_timestamp,
+    constraint fk_expiry_alerts_batch
+	foreign key (batch_id) references batches(batch_id),
+    constraint fk_expiry_alerts_medicine
+    foreign key (medicine_id) references medicines(medicine_id)
+);
 
 
+drop procedure if exists checkExpiringBatches;
+delimiter $$
 
-
+create procedure checkExpiringBatches()
+begin
+	declare done int default false;
+    declare v_batch_id int;
+    declare v_medicine_id int;
+    declare v_expiry_date date;
+    declare v_days_left int;
+    
+    declare batch_cursor cursor for
+		select batch_id, medicine_id, expiry_date
+        from batches;
+	declare continue handler for not found set done = true;
+    
+    open batch_cursor;
+    read_loop: loop
+		fetch batch_cursor into v_batch_id, v_medicine_id, v_expiry_date;
+        if done then
+			leave read_loop;
+		end if;
+        set v_days_left = datediff(v_expiry_date, curdate());
+        if v_days_left between 0 and 30 then
+			insert into expiry_alerts(batch_id, medicine_id, expiry_date, days_left, message) values
+				(v_batch_id, v_medicine_id, v_expiry_date, v_days_left, concat('Batch ', v_batch_id, 'expires in ', v_days_left, ' days'));
+		end if;
+	end loop;
+    close batch_cursor;
+end $$
+delimiter ;
 
 
 
